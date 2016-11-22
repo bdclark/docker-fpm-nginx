@@ -1,0 +1,3 @@
+#!/bin/sh
+# bring down container if nginx stops
+s6-svscanctl -t /var/run/s6/services
