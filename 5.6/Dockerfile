@@ -161,6 +161,25 @@ RUN apk add --no-cache curl \
   && tar xzf s6-overlay-amd64.tar.gz -C / \
   && rm s6-overlay-amd64.tar.gz
 
+# Install composer
+ENV COMPOSER_VERSION 1.2.4
+ENV COMPOSER_HOME /composer
+ENV PATH /composer/vendor/bin:$PATH
+ENV COMPOSER_ALLOW_SUPERUSER 1
+RUN set -e \
+  && php -r ' \
+    $signature = "aa96f26c2b67226a324c27919f1eb05f21c248b987e6195cad9690d5c1ff713d53020a02ac8c217dbf90a7eacc9d141d"; \
+    $file = "/tmp/installer.php"; \
+    copy("https://getcomposer.org/installer", $file); \
+    $hash = hash("SHA384", file_get_contents($file)); \
+    if (!hash_equals($signature, $hash)) { \
+      unlink($file); \
+      echo "Invalid installer signature", PHP_EOL; \
+      exit(1); \
+    }' \
+  && php /tmp/installer.php --no-ansi --install-dir=/usr/bin --filename=composer --version=${COMPOSER_VERSION} \
+  && rm /tmp/installer.php
+
 ENV PHP_ENABLE_OPCACHE true
 COPY etc /etc/
 COPY usr_local_etc /usr/local/etc/
