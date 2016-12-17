@@ -186,4 +186,4 @@ COPY usr_local_etc /usr/local/etc/
 
 EXPOSE 80 443
 
-ENTRYPOINT ["/init"]
+CMD ["/init"]
