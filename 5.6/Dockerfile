@@ -180,6 +180,8 @@ RUN set -e \
   && php /tmp/installer.php --no-ansi --install-dir=/usr/bin --filename=composer --version=${COMPOSER_VERSION} \
   && rm /tmp/installer.php
 
+WORKDIR /app
+
 ENV PHP_ENABLE_OPCACHE true
 COPY etc /etc/
 COPY usr_local_etc /usr/local/etc/
