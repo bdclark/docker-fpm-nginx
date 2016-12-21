@@ -6,7 +6,7 @@ GID=${GID:-0}
 
 # If we are running composer, make sure it executes as the specified uid/gid.
 if [ "$1" = "composer" ]; then
-  su-exec ${UID}:${PWD} "$@"
+  su-exec ${UID}:${GID} "$@"
 fi
 
 exec "$@"
