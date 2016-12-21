@@ -152,40 +152,42 @@ RUN set -ex \
       | xargs -r apk info --installed \
       | sort -u \
   )" \
-  && apk add --no-cache --virtual .php-rundeps $runDeps \
+  && apk add --no-cache --virtual .php-rundeps \
+    $runDeps \
+    su-exec \
   && apk del .phpize-deps
 
 ENV S6_VERSION v1.18.1.5
-RUN apk add --no-cache curl \
+RUN apk add --no-cache --virtual .s6-deps curl \
   && curl -fsLo s6-overlay-amd64.tar.gz https://github.com/just-containers/s6-overlay/releases/download/${S6_VERSION}/s6-overlay-amd64.tar.gz \
   && tar xzf s6-overlay-amd64.tar.gz -C / \
-  && rm s6-overlay-amd64.tar.gz
+  && rm s6-overlay-amd64.tar.gz \
+  && apk del  .s6-deps
 
 # Install composer
 ENV COMPOSER_VERSION 1.2.4
 ENV COMPOSER_HOME /composer
 ENV PATH /composer/vendor/bin:$PATH
 ENV COMPOSER_ALLOW_SUPERUSER 1
-RUN set -e \
+RUN apk add --no-cache --virtual .composer-deps curl \
+  && curl -o /tmp/composer-setup.php https://getcomposer.org/installer \
+  && curl -o /tmp/composer-setup.sig https://composer.github.io/installer.sig \
   && php -r ' \
-    $signature = "aa96f26c2b67226a324c27919f1eb05f21c248b987e6195cad9690d5c1ff713d53020a02ac8c217dbf90a7eacc9d141d"; \
-    $file = "/tmp/installer.php"; \
-    copy("https://getcomposer.org/installer", $file); \
-    $hash = hash("SHA384", file_get_contents($file)); \
-    if (!hash_equals($signature, $hash)) { \
-      unlink($file); \
-      echo "Invalid installer signature", PHP_EOL; \
-      exit(1); \
+    if (hash("SHA384", file_get_contents("/tmp/composer-setup.php")) !== trim(file_get_contents("/tmp/composer-setup.sig"))) { \
+      unlink("/tmp/composer-setup.php"); echo "Invalid installer" . PHP_EOL; exit(1); \
     }' \
-  && php /tmp/installer.php --no-ansi --install-dir=/usr/bin --filename=composer --version=${COMPOSER_VERSION} \
-  && rm /tmp/installer.php
+  && php /tmp/composer-setup.php --install-dir=/usr/bin --filename=composer --version=${COMPOSER_VERSION} \
+  && rm /tmp/composer-setup.* \
+  && apk del .composer-deps
 
 WORKDIR /app
 
 ENV PHP_ENABLE_OPCACHE true
 COPY etc /etc/
 COPY usr_local_etc /usr/local/etc/
+COPY docker-entrypoint.sh /entrypoint.sh
 
 EXPOSE 80 443
 
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["/init"]
