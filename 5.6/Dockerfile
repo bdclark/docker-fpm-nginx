@@ -169,7 +169,7 @@ ENV COMPOSER_VERSION 1.2.4
 ENV COMPOSER_HOME /composer
 ENV PATH /composer/vendor/bin:$PATH
 ENV COMPOSER_ALLOW_SUPERUSER 1
-RUN apk add --no-cache --virtual .composer-deps curl \
+RUN apk add --no-cache git \
   && curl -o /tmp/composer-setup.php https://getcomposer.org/installer \
   && curl -o /tmp/composer-setup.sig https://composer.github.io/installer.sig \
   && php -r ' \
@@ -177,8 +177,7 @@ RUN apk add --no-cache --virtual .composer-deps curl \
       unlink("/tmp/composer-setup.php"); echo "Invalid installer" . PHP_EOL; exit(1); \
     }' \
   && php /tmp/composer-setup.php --install-dir=/usr/bin --filename=composer --version=${COMPOSER_VERSION} \
-  && rm /tmp/composer-setup.* \
-  && apk del .composer-deps
+  && rm /tmp/composer-setup.*
 
 WORKDIR /app
 
