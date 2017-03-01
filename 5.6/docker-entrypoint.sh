@@ -1,12 +1,22 @@
 #!/bin/sh
 set -e
 
-UID=${UID:-0}
-GID=${GID:-0}
-home=/root
+echo "date.timezone=${PHP_TIMEZONE:-UTC}" > $PHP_INI_DIR/conf.d/01-date_timezone.ini
+
+if [ "$PHP_ENABLE_OPCACHE" = true ]; then
+  echo "zend_extension=opcache.so" > $PHP_INI_DIR/conf.d/docker-php-ext-opcache.ini
+fi
+
+if [ "$PHP_ENABLE_XDEBUG" = true ]; then
+  echo "zend_extension=xdebug.so" > $PHP_INI_DIR/conf.d/docker-php-ext-xdebug.ini
+fi
 
 # if running composer, support custom uid/gid and ssh
 if [ "$1" = "composer" ]; then
+  UID=${UID:-0}
+  GID=${GID:-0}
+  home=/root
+
   if [ "$UID" -ne "0" ]; then
     home=/home/composer
     addgroup -g $GID composer
