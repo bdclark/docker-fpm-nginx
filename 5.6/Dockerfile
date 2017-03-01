@@ -2,7 +2,7 @@ FROM php:5.6-fpm-alpine
 
 # Install NGINX
 # Taken from https://github.com/nginxinc/docker-nginx/tree/master/mainline/alpine
-ENV NGINX_VERSION 1.11.6
+ENV NGINX_VERSION 1.11.10
 RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
   && CONFIG="\
     --prefix=/etc/nginx \
@@ -157,15 +157,18 @@ RUN set -ex \
     su-exec \
   && apk del .phpize-deps
 
-ENV S6_VERSION v1.18.1.5
-RUN apk add --no-cache --virtual .s6-deps curl \
+ENV S6_VERSION v1.19.1.1
+RUN apk add --no-cache --virtual .s6-deps curl gnupg \
+  && curl https://keybase.io/justcontainers/key.asc | gpg --import \
   && curl -fsLo s6-overlay-amd64.tar.gz https://github.com/just-containers/s6-overlay/releases/download/${S6_VERSION}/s6-overlay-amd64.tar.gz \
+  && curl -fsLo s6-overlay-amd64.tar.gz.sig https://github.com/just-containers/s6-overlay/releases/download/${S6_VERSION}/s6-overlay-amd64.tar.gz.sig \
+  && gpg --batch --verify s6-overlay-amd64.tar.gz.sig s6-overlay-amd64.tar.gz \
   && tar xzf s6-overlay-amd64.tar.gz -C / \
   && rm s6-overlay-amd64.tar.gz \
   && apk del  .s6-deps
 
 # Install composer
-ENV COMPOSER_VERSION 1.2.4
+ENV COMPOSER_VERSION 1.3.2
 ENV COMPOSER_HOME /composer
 ENV PATH /composer/vendor/bin:$PATH
 ENV COMPOSER_ALLOW_SUPERUSER 1
